@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="slides-format" content="viewport">
+  <title>Reliability Intelligence System (RIS)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style type="text/tailwindcss">
+    @theme {
+      --color-bg: #0A0A0A;
+      --color-bg-deep: #111111;
+      --color-surface: #171717;
+      --color-text: #E5FFE9;
+      --color-text-secondary: #B7D9BF;
+      --color-text-muted: #86A68D;
+      --color-accent-1: #00FF41;
+      --color-accent-2: #FFA500;
+      --color-accent-3: #FF5C5C;
+      --color-glass-bg: rgba(0,255,65,0.05);
+      --color-glass-border: rgba(0,255,65,0.12);
+      --color-vignette: rgba(0,0,0,0.55);
+      --font-display: 'JetBrains Mono', monospace;
+      --font-body: 'Inter', sans-serif;
+    }
+  </style>
+  <style>
+    :root { --color-bg: #0A0A0A; --color-text: #E5FFE9; --glow-color-rgb: 0,255,65; }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { background: var(--color-bg); margin: 0; }
+    body { font-family: var(--font-body); color: var(--color-text); overflow: hidden; height: 100vh; width: 100vw; }
+    .deck { width: 100vw; height: 100vh; position: relative; }
+    .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--color-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transform: scale(0.95); transition: opacity 0.7s ease, transform 0.7s ease; pointer-events: none; overflow: hidden; }
+    .slide.active { opacity: 1; transform: scale(1); pointer-events: all; }
+    .slide > .content { position: relative; z-index: 2; width: 100%; max-width: 1180px; padding: clamp(1.5rem, 4vw, 4rem); }
+    .nav-controls { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 16px; z-index: 100; background: var(--color-glass-bg); backdrop-filter: blur(10px); padding: 10px 24px; border-radius: 40px; border: 1px solid var(--color-glass-border); }
+    .nav-btn { width: 40px; height: 40px; border: none; background: var(--color-glass-bg); color: var(--color-accent-1); border-radius: 50%; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .slide-dots { display: flex; gap: 8px; }
+    .slide-dots .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--color-glass-border); cursor: pointer; }
+    .slide-dots .dot.active { background: var(--color-accent-1); transform: scale(1.3); }
+    .slide-counter { font-size: 0.8rem; color: var(--color-text-muted); min-width: 44px; text-align: center; }
+    .reveal { opacity: 0; transform: translateY(20px); }
+    .gradient-mesh { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; border-radius: 50%; filter: blur(80px); animation: float-slow 12s ease-in-out infinite; }
+    .blob:nth-child(2) { animation: float-drift 16s ease-in-out infinite; }
+    .blob:nth-child(3) { animation: float-slow 20s ease-in-out infinite reverse; }
+    @keyframes float-slow { 0% { transform: translate(0,0) scale(1);} 25% { transform: translate(60px,-50px) scale(1.1);} 50% { transform: translate(-40px,40px) scale(0.9);} 75% { transform: translate(50px,20px) scale(1.05);} 100% { transform: translate(0,0) scale(1);} }
+    @keyframes float-drift { 0% { transform: translate(0,0) scale(1) rotate(0deg);} 33% { transform: translate(-50px,-60px) scale(1.15) rotate(3deg);} 66% { transform: translate(40px,30px) scale(0.88) rotate(-2deg);} 100% { transform: translate(0,0) scale(1) rotate(0deg);} }
+    @keyframes float { 0%,100% { transform: translateY(0);} 50% { transform: translateY(-15px);} }
+    .slide::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"); background-repeat: repeat; background-size: 256px 256px; opacity: 0.03; mix-blend-mode: overlay; }
+    .slide::after { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(ellipse at center, transparent 50%, var(--color-vignette) 100%); }
+    .text-glow { text-shadow: 0 0 20px rgba(var(--glow-color-rgb), 0.45), 0 0 40px rgba(var(--glow-color-rgb), 0.18); }
+    .bar-track { width: 100%; height: 24px; border-radius: 999px; background: rgba(255,255,255,0.06); overflow: hidden; border: 1px solid rgba(0,255,65,0.08); }
+    .bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--color-accent-1), var(--color-accent-2)); }
+    .mouse-spotlight { position: fixed; inset: 0; z-index: 99; pointer-events: none; }
+    .workflow-frame { background: rgba(255,255,255,0.92); border-radius: 24px; padding: 18px; border: 1px solid rgba(0,255,65,0.22); box-shadow: 0 18px 60px rgba(0,0,0,0.35); }
+    .section-label { letter-spacing: .18em; text-transform: uppercase; color: var(--color-text-muted); font-size: .82rem; }
+  </style>
+</head>
+<body>
+<div class="mouse-spotlight"></div>
+<div class="deck">
+
+  <div class="slide slide-1 active" data-slide="1">
+    <div class="gradient-mesh">
+      <div class="blob" style="width: 520px; height: 520px; top: -120px; right: -100px; background: var(--color-accent-1); opacity: .14;"></div>
+      <div class="blob" style="width: 330px; height: 330px; bottom: -80px; left: -50px; background: var(--color-accent-2); opacity: .12;"></div>
+      <div class="blob" style="width: 260px; height: 260px; top: 42%; left: 20%; background: var(--color-accent-3); opacity: .08;"></div>
+    </div>
+    <canvas class="particle-canvas" style="position:absolute; inset:0; z-index:1;"></canvas>
+    <div class="content text-center">
+      <div class="text-[96px] mb-5 animate-[float_3s_ease-in-out_infinite] reveal">⚙️</div>
+      <h1 class="font-display text-[clamp(2.8rem,5.8vw,4.8rem)] font-extrabold tracking-tight mb-4 bg-linear-to-br from-accent-1 via-accent-2 to-accent-1 bg-clip-text text-transparent reveal">Reliability Intelligence System</h1>
+      <p class="text-[clamp(1rem,1.7vw,1.4rem)] text-text-secondary max-w-4xl mx-auto leading-relaxed reveal">Automated alert triage, runbook mapping, safe remediation, and approval-driven incident recovery for higher resilience and lower MTTR.</p>
+      <div class="grid grid-cols-3 gap-5 mt-10 max-w-5xl mx-auto">
+        <div class="bg-glass-bg backdrop-blur-xl border border-glass-border rounded-2xl p-5 reveal hover:-translate-y-1 hover:shadow-xl transition"><div class="text-3xl font-extrabold text-accent-1 text-glow">Critical Alerts</div><div class="text-sm text-text-secondary mt-2">Focuses on high-priority incidents instead of noisy low-value signals.</div></div>
+        <div class="bg-glass-bg backdrop-blur-xl border border-glass-border rounded-2xl p-5 reveal hover:-translate-y-1 hover:shadow-xl transition"><div class="text-3xl font-extrabold text-accent-2">Runbook Aware</div><div class="text-sm text-text-secondary mt-2">Connects alert context with YAML, Markdown, or database-backed response guides.</div></div>
+        <div class="bg-glass-bg backdrop-blur-xl border border-glass-border rounded-2xl p-5 reveal hover:-translate-y-1 hover:shadow-xl transition"><div class="text-3xl font-extrabold text-accent-3">Slack Controlled</div><div class="text-sm text-text-secondary mt-2">Requests approvals for risky actions and logs every step for auditability.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide slide-2" data-slide="2">
+    <div class="gradient-mesh">
+      <div class="blob" style="width: 360px; height: 360px; top: -80px; right: -80px; background: var(--color-accent-1); opacity: .08;"></div>
+      <div class="blob" style="width: 280px; height: 280px; bottom: -80px; left: -40px; background: var(--color-accent-2); opacity: .06;"></div>
+    </div>
+    <div class="content">
+      <p class="section-label reveal">System objective</p>
+      <h2 class="font-display text-[clamp(2rem,4.2vw,3.1rem)] font-bold mb-8 reveal">What RIS solves</h2>
+      <div class="grid grid-cols-2 gap-6 mt-8">
+        <div class="bg-glass-bg backdrop-blur-xl border-l-4 border-accent-1 border border-glass-border rounded-2xl p-7 reveal hover:-translate-y-1 hover:shadow-xl transition">
+          <h3 class="font-display text-xl mb-3 text-accent-1">Alert overload</h3>
+          <p class="text-text-secondary leading-relaxed">RIS filters incoming events so responders spend time on critical alerts that can impact uptime, customer traffic, or service health.</p>
+        </div>
+        <div class="bg-glass-bg backdrop-blur-xl border-l-4 border-accent-2 border border-glass-border rounded-2xl p-7 reveal hover:-translate-y-1 hover:shadow-xl transition">
+          <h3 class="font-display text-xl mb-3 text-accent-2">Slow diagnosis</h3>
+          <p class="text-text-secondary leading-relaxed">The LLM enriches alert context and maps incidents to the most relevant runbook, shrinking the time spent searching for recovery steps.</p>
+        </div>
+        <div class="bg-glass-bg backdrop-blur-xl border-l-4 border-accent-3 border border-glass-border rounded-2xl p-7 reveal hover:-translate-y-1 hover:shadow-xl transition">
+          <h3 class="font-display text-xl mb-3 text-accent-3">Unsafe automation</h3>
+          <p class="text-text-secondary leading-relaxed">Only non-destructive remediation is automated by default, while risky operations are gated behind explicit approval in Slack.</p>
+        </div>
+        <div class="bg-glass-bg backdrop-blur-xl border-l-4 border-accent-1 border border-glass-border rounded-2xl p-7 reveal hover:-translate-y-1 hover:shadow-xl transition">
+          <h3 class="font-display text-xl mb-3 text-accent-1">Poor visibility</h3>
+          <p class="text-text-secondary leading-relaxed">Execution trails, approvals, and outcomes are mirrored into Slack and backend logs so incident handling stays transparent and auditable.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide slide-3" data-slide="3">
+    <div class="gradient-mesh">
+      <div class="blob" style="width: 380px; height: 380px; top: -100px; left: -80px; background: var(--color-accent-1); opacity: .08;"></div>
+      <div class="blob" style="width: 260px; height: 260px; bottom: -60px; right: -40px; background: var(--color-accent-3); opacity: .06;"></div>
+    </div>
+    <div class="content">
+      <p class="section-label reveal">Architecture</p>
+      <h2 class="font-display text-[clamp(2rem,4vw,3rem)] font-bold mb-6 reveal">Integrated workflow</h2>
+      <div class="grid grid-cols-[1.25fr_.75fr] gap-8 items-center">
+        <div class="workflow-frame reveal">
+          <img src="/images/RIS.png" alt="RIS workflow diagram" style="width:100%; border-radius: 18px; display:block;">
+        </div>
+        <div class="space-y-4">
+          <div class="bg-glass-bg backdrop-blur-xl border border-glass-border rounded-2xl p-5 reveal hover:-translate-y-1 hover:shadow-xl transition"><span class="text-accent-1 font-semibold">1.</span> Alerting tool sends a webhook to the backend codebase.</div>
+          <div class="bg-glass-bg backdrop-blur-xl border border-glass-border rounded-2xl p-5 reveal hover:-translate-y-1 hover:shadow-xl transition"><span class="text-accent-2 font-semibold">2.</span> Redis applies rate control before context is handed to the LLM.</div>
+          <div class="bg-glass-bg backdrop-blur-xl border border-glass-border rounded-2xl p-5 reveal hover:-translate-y-1 hover:shadow-xl transition"><span class="text-accent-3 font-semibold">3.</span> Runbook search determines whether safe auto-resolution is possible or human approval is needed.</div>
+          <div class="bg-glass-bg backdrop-blur-xl border border-glass-border rounded-2xl p-5 reveal hover:-translate-y-1 hover:shadow-xl transition"><span class="text-accent-1 font-semibold">4.</span> Slack captures approvals, status updates, and final audit logs.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide slide-4" data-slide="4">
+    <div class="gradient-mesh">
+      <div class="blob" style="width: 320px; height: 320px; top: -60px; right: 5%; background: var(--color-accent-2); opacity: .08;"></div>
+      <div class="blob" style="width: 260px; height: 260px; bottom: -70px; left: 8%; background: var(--color-accent-1); opacity: .07;"></div>
+    </div>
+    <canvas class="particle-canvas-ambient" style="position:absolute; inset:0; z-index:1;"></canvas>
+    <div class="content">
+      <p class="section-label reveal">Key capabilities</p>
+      <h2 class="font-display text-[clamp(2rem,4vw,3rem)] font-bold mb-8 reveal">Core functional highlights</h2>
+      <div class="grid grid-cols-3 gap-6">
+        <div class="bg-glass-bg backdrop-blur-xl border border-glass-border rounded-2xl p-6 reveal hover:-translate-y-1 hover:shadow-xl transition"><div class="text-4xl mb-3">🚨</div><h3 class="font-display text-lg text-accent-1 mb-2">Critical-only processing</h3><p class="text-sm text-text-secondary">Cuts noise by filtering for high-priority alerts with real reliability impact.</p></div>
+        <div class="bg-glass-bg backdrop-blur-xl border border-glass-border rounded-2xl p-6 reveal hover:-translate-y-1 hover:shadow-xl transition"><div class="text-4xl mb-3">📚</div><h3 class="font-display text-lg text-accent-2 mb-2">Runbook mapping</h3><p class="text-sm text-text-secondary">Matches incidents to response guides stored as YAML, Markdown, or DB entries.</p></div>
+        <div class="bg-glass-bg backdrop-blur-xl border border-glass-border rounded-2xl p-6 reveal hover:-translate-y-1 hover:shadow-xl transition"><div class="text-4xl mb-3">🤖</div><h3 class="font-display text-lg text-accent-1 mb-2">Safe remediation</h3><p class="text-sm text-text-secondary">Automates non-destructive actions such as restarts, cache cleanup, or jobs.</p></div>
+        <div class="bg-glass-bg backdrop-blur-xl border border-glass-border rounded-2xl p-6 reveal hover:-translate-y-1 hover:shadow-xl transition"><div class="text-4xl mb-3">💬</div><h3 class="font-display text-lg text-accent-3 mb-2">Slack traceability</h3><p class="text-sm text-text-secondary">Posts progress, action logs, and approvals into channels for shared visibility.</p></div>
+        <div class="bg-glass-bg backdrop-blur-xl border border-glass-border rounded-2xl p-6 reveal hover:-translate-y-1 hover:shadow-xl transition"><div class="text-4xl mb-3">🛡️</div><h3 class="font-display text-lg text-accent-2 mb-2">Controlled escalation</h3><p class="text-sm text-text-secondary">Requests humans to approve risky operations like DB restarts or scaling changes.</p></div>
+        <div class="bg-glass-bg backdrop-blur-xl border border-glass-border rounded-2xl p-6 reveal hover:-translate-y-1 hover:shadow-xl transition"><div class="text-4xl mb-3">⏱️</div><h3 class="font-display text-lg text-accent-1 mb-2">Lower MTTR</h3><p class="text-sm text-text-secondary">Combines context, automation, and approvals to shorten the path from alert to recovery.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide slide-5" data-slide="5">
+    <div class="gradient-mesh">
+      <div class="blob" style="width: 340px; height: 340px; top: -90px; right: -50px; background: var(--color-accent-1); opacity: .08;"></div>
+      <div class="blob" style="width: 220px; height: 220px; bottom: -50px; left: 10%; background: var(--color-accent-2); opacity: .07;"></div>
+    </div>
+    <div class="content">
+      <p class="section-label reveal">Execution model</p>
+      <h2 class="font-display text-[clamp(2rem,4vw,3rem)] font-bold mb-8 reveal">How RIS handles alerts</h2>
+      <div class="grid grid-cols-2 gap-6 mt-8">
+        <div class="bg-glass-bg backdrop-blur-xl border border-glass-border rounded-2xl p-7 reveal hover:-translate-y-1 hover:shadow-xl transition">
+          <h3 class="font-display text-xl text-accent-1 mb-4">Autonomous path</h3>
+          <ul class="space-y-3 text-text-secondary text-[1rem] leading-relaxed">
+            <li class="reveal">Reads incoming critical alert payloads.</li>
+            <li class="reveal">Enriches context with cluster or service details.</li>
+            <li class="reveal">Maps to the most relevant runbook.</li>
+            <li class="reveal">Executes safe remediation using scripts, Ansible, or Kubernetes jobs.</li>
+            <li class="reveal">Logs the outcome back to Slack and the backend datastore.</li>
+          </ul>
+        </div>
+        <div class="bg-glass-bg backdrop-blur-xl border border-glass-border rounded-2xl p-7 reveal hover:-translate-y-1 hover:shadow-xl transition">
+          <h3 class="font-display text-xl text-accent-2 mb-4">Approval-gated path</h3>
+          <ul class="space-y-3 text-text-secondary text-[1rem] leading-relaxed">
+            <li class="reveal">Flags steps with higher blast radius before execution.</li>
+            <li class="reveal">Pushes a decision request to Slack with alert and runbook context.</li>
+            <li class="reveal">Waits for human approval or rejection.</li>
+            <li class="reveal">Performs the chosen action and records the decision trail.</li>
+            <li class="reveal">Keeps accountability while still accelerating response time.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide slide-6" data-slide="6">
+    <div class="gradient-mesh">
+      <div class="blob" style="width: 420px; height: 420px; top: -120px; left: -100px; background: var(--color-accent-3); opacity: .07;"></div>
+      <div class="blob" style="width: 300px; height: 300px; bottom: -80px; right: -70px; background: var(--color-accent-1); opacity: .09;"></div>
+    </div>
+    <canvas class="particle-canvas" style="position:absolute; inset:0; z-index:1;"></canvas>
+    <div class="content text-center">
+      <p class="section-label reveal">Business value</p>
+      <h2 class="font-display text-[clamp(2rem,4vw,3rem)] font-bold mb-8 reveal">Operational impact</h2>
+      <div class="grid grid-cols-3 gap-6 mt-8">
+        <div class="bg-glass-bg backdrop-blur-xl border border-glass-border rounded-2xl p-8 reveal hover:-translate-y-1 hover:shadow-xl transition">
+          <div class="text-6xl mb-4">⚡</div>
+          <div class="text-3xl font-extrabold text-accent-1 text-glow mb-2">Faster recovery</div>
+          <p class="text-text-secondary">Runbook-driven response removes time lost in manual triage and repetitive diagnosis.</p>
+        </div>
+        <div class="bg-glass-bg backdrop-blur-xl border border-glass-border rounded-2xl p-8 reveal hover:-translate-y-1 hover:shadow-xl transition">
+          <div class="text-6xl mb-4">📈</div>
+          <div class="text-3xl font-extrabold text-accent-2 mb-2">Higher reliability</div>
+          <p class="text-text-secondary">Safer automation standardizes actions and reduces incident handling variance across responders.</p>
+        </div>
+        <div class="bg-glass-bg backdrop-blur-xl border border-glass-border rounded-2xl p-8 reveal hover:-translate-y-1 hover:shadow-xl transition">
+          <div class="text-6xl mb-4">👁️</div>
+          <div class="text-3xl font-extrabold text-accent-3 mb-2">Clear visibility</div>
+          <p class="text-text-secondary">Slack updates and backend logs create a traceable, collaborative incident history.</p>
+        </div>
+      </div>
+      <div class="mt-10 bg-glass-bg backdrop-blur-xl border border-glass-border rounded-2xl p-6 max-w-4xl mx-auto reveal">
+        <div class="grid grid-cols-3 gap-6 items-center">
+          <div><div class="text-sm uppercase tracking-[.18em] text-text-muted mb-2">Focus</div><div class="text-xl font-bold">Critical alerts only</div></div>
+          <div><div class="text-sm uppercase tracking-[.18em] text-text-muted mb-2">Control</div><div class="text-xl font-bold">Approval for risky steps</div></div>
+          <div><div class="text-sm uppercase tracking-[.18em] text-text-muted mb-2">Goal</div><div class="text-xl font-bold">Lower MTTR with guardrails</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="nav-controls">
+  <button class="nav-btn" onclick="changeSlide(-1)" aria-label="Previous slide">&#8249;</button>
+  <div class="slide-dots" id="dots"></div>
+  <button class="nav-btn" onclick="changeSlide(1)" aria-label="Next slide">&#8250;</button>
+  <span class="slide-counter" id="counter">1 / 6</span>
+</div>
+
+<script>
+let current = 1;
+const total = document.querySelectorAll('.slide').length;
+const dotsContainer = document.getElementById('dots');
+const counter = document.getElementById('counter');
+for (let i = 1; i <= total; i++) { const dot = document.createElement('div'); dot.className = 'dot' + (i === 1 ? ' active' : ''); dot.onclick = () => goToSlide(i); dotsContainer.appendChild(dot); }
+function goToSlide(n) { const prev = document.querySelector('.slide.active'); const next = document.querySelector(`.slide[data-slide="${n}"]`); if (prev) prev.classList.remove('active'); if (next) { next.classList.add('active'); animateSlide(next); } current = n; updateNav(); }
+function changeSlide(dir) { let next = current + dir; if (next < 1) next = total; if (next > total) next = 1; goToSlide(next); }
+function updateNav() { document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i + 1 === current)); counter.textContent = current + ' / ' + total; }
+document.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); changeSlide(1); } if (e.key === 'ArrowLeft') { e.preventDefault(); changeSlide(-1); } });
+let touchStartX = 0;
+document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', (e) => { const diff = touchStartX - e.changedTouches[0].clientX; if (Math.abs(diff) > 50) changeSlide(diff > 0 ? 1 : -1); });
+function animateSlide(slide) {
+  slide.querySelectorAll('.reveal').forEach((el, i) => {
+    el.style.transition = 'none'; el.style.opacity = '0'; el.style.transform = 'translateY(20px)'; el.offsetHeight;
+    const delay = i * 0.08;
+    el.style.transition = `opacity 0.35s ease ${delay}s, transform 0.35s ease ${delay}s`;
+    el.style.opacity = '1'; el.style.transform = 'translateY(0px)';
+  });
+}
+document.addEventListener('mousemove', (e) => {
+  const spotlight = document.querySelector('.mouse-spotlight');
+  spotlight.style.background = `radial-gradient(600px circle at ${e.clientX}px ${e.clientY}px, rgba(0,255,65,0.06), transparent 40%)`;
+});
+window.initParticles = function(canvas, options) {
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
+  const interactive = options.interactive !== false;
+  const count = options.count || (interactive ? 55 : 18);
+  let mx = -1000, my = -1000;
+  const particles = Array.from({ length: count }, () => ({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, size: Math.random() * 2.5 + 0.8, alpha: Math.random() * 0.35 + 0.1 }));
+  if (interactive) { canvas.addEventListener('mousemove', (e) => { const rect = canvas.getBoundingClientRect(); mx = e.clientX - rect.left; my = e.clientY - rect.top; }); canvas.addEventListener('mouseleave', () => { mx = -1000; my = -1000; }); }
+  (function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      if (interactive) { const dx = p.x - mx, dy = p.y - my, dist = Math.sqrt(dx * dx + dy * dy) || 1; if (dist < 120) { const force = (120 - dist) / 120 * 2; p.vx += (dx / dist) * force * 0.1; p.vy += (dy / dist) * force * 0.1; } }
+      p.vx *= 0.98; p.vy *= 0.98; p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = canvas.width; if (p.x > canvas.width) p.x = 0; if (p.y < 0) p.y = canvas.height; if (p.y > canvas.height) p.y = 0;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fillStyle = `rgba(0,255,65,${p.alpha})`; ctx.fill();
+    });
+    requestAnimationFrame(animate);
+  })();
+};
+document.querySelectorAll('.particle-canvas').forEach(c => window.initParticles(c, { interactive: true, count: 55 }));
+document.querySelectorAll('.particle-canvas-ambient').forEach(c => window.initParticles(c, { interactive: false, count: 18 }));
+try { animateSlide(document.querySelector('.slide.active')); } catch (e) {}
+</script>
+</body>
+</html>
