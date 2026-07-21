@@ -27,7 +27,9 @@ It integrates components such as the **Alerting tool**, **Backend Codebase**, **
 
 ---
 
-## 🧩 Integrated Workflow (as shown in the diagram)
+## 🧩 Integrated Workflow
+
+![Reliability Intelligence System Workflow](https://github.com/SivaK-98/RIS/blob/main/images/RIS.png)
 
 1. **Alerting tool** triggers the process via webhook.  
 2. **Backend Codebase** routes data through **Redis** for rate control.  
@@ -36,6 +38,7 @@ It integrates components such as the **Alerting tool**, **Backend Codebase**, **
    - If required → approval flows through **Slack**.  
    - If not → automated **Issue Resolution** proceeds.  
 5. All actions and outcomes are logged in **Slack** for visibility and audit.
+
 
 ---
 
