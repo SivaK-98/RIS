@@ -41,4 +41,7 @@ It integrates components such as the **Alerting tool**, **Backend Codebase**, **
 
 ## 💡 Impact
 
-By combining **automation** with **controlled
+By combining **automation** with **controlled human approvals**, RIS delivers:
+- Faster recovery from incidents  
+- Higher operational reliability  
+- Consistent visibility into alert handling and resolution
