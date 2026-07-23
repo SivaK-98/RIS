@@ -1,5 +1,6 @@
 # ⚙️ Reliability Intelligence System (RIS)
 
+
 The **Reliability Intelligence System (RIS)** enhances system resilience by automating the **end-to-end alert management process**, ensuring faster recovery, higher reliability, and consistent visibility into incident handling.  
 It integrates components such as the **Alerting tool**, **Backend Codebase**, **Redis**, **LLM**, **Runbook Search**, and **Slack Approval Mechanism**, forming a closed-loop workflow from detection to resolution.
 
